@@ -3,5 +3,11 @@ uvicorn[standard]
 
 sqlalchemy
 asyncpg
+alembic
+psycopg2-binary
+
+passlib
+bcrypt
+pydantic[email]
 
 envparse

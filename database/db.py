@@ -13,7 +13,7 @@ env = Env()
 
 SQLALCHEMY_DATABASE_URL = env.str(
     'SQLALCHEMY_DATABASE_URL',
-    default='postgresql+asyncpg://user:password@localhost/db'
+    default='postgresql+asyncpg://user:password@localhost/dbase'
 )
 
 # create async engine for interaction with database
