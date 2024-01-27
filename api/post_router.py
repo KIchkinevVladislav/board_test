@@ -5,13 +5,14 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import HTTPException, status
 from fastapi import Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from database.db import get_db
 from database.models import User, Post
-from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostDetail
-from crud.post_crud import _create_new_category, _create_new_post, _get_list_posts, _get_post
+from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostDetail, DeletePostResponse
+from crud.post_crud import _create_new_category, _create_new_post, _get_list_posts, _get_post, _delete_post
 from crud.user_crud import get_current_user_from_token
 from api.user_router import _check_admin_role
 
@@ -30,7 +31,7 @@ async def create_category(body: CategoryCreate,
         return await _create_new_category(body, db)
     except IntegrityError as err:
         logger.error(err)
-        raise HTTPException(status_code=503, detail=f"Database error: {err}")
+        raise HTTPException(status_code=503, detail=f'Database error: {err}')
     
 
 
@@ -42,7 +43,7 @@ async def create_post(body: CreatePost,
         return await _create_new_post(body, db, author)
     except IntegrityError as err:
         logger.error(err)
-        raise HTTPException(status_code=503, detail=f"Database error: {err}")
+        raise HTTPException(status_code=503, detail=f'Database error: {err}')
     
 
 @router.get('/', response_model=List[ShowPostDetail])
@@ -51,13 +52,13 @@ async def get_posts(db: AsyncSession = Depends(get_db)):
         return await _get_list_posts(db)
     except IntegrityError as err:
         logger.error(err)
-        raise HTTPException(status_code=503, detail=f"Database error: {err}")
+        raise HTTPException(status_code=503, detail=f'Database error: {err}')
         
 
-@router.get("/{post_id}", response_model=ShowPostDetail)
+@router.get('/{post_id}', response_model=ShowPostDetail)
 async def get_post(post_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        post = await _get_post(db, post_id)
+        post = await _get_post(post_id, db)
         if not post:
             raise HTTPException(
                 status_code=404,
@@ -67,3 +68,26 @@ async def get_post(post_id: int, db: AsyncSession = Depends(get_db)):
         logger.error(err)
         raise HTTPException(status_code=503, detail=f'Database error: {err}')
 
+
+@router.delete('/delete_post', response_model=DeletePostResponse)
+async def delete_post(
+    post_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    post = await _get_post(post_id, db)
+    if not post:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Post number {post_id} does not exist.') 
+
+    try:
+        if current_user.id == post.user_id:
+            await _delete_post(post_id, db)
+        else:
+            _check_admin_role(current_user)
+            await _delete_post(post_id, db)
+        return DeletePostResponse(deleted_post_id=post_id)
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f'Database error: {err}')

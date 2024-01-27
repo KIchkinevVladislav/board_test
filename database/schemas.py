@@ -91,3 +91,7 @@ class ShowPostDetail(TunedModel):
     price: Decimal
     user_email: str
     category_name: str
+
+
+class DeletePostResponse(BaseModel):
+    deleted_post_id: int

@@ -22,7 +22,7 @@ registration and authorization.
 """
 env = Env()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/user/token')
 
 
 async def _create_new_user(body: UserCreate, db: AsyncSession) -> ShowUser:

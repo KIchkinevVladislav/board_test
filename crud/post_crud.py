@@ -1,8 +1,13 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from decimal import Decimal
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
 from typing import List
+from typing import Union
+from uuid import UUID
+from decimal import Decimal
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import delete
+from sqlalchemy.orm import joinedload
+from fastapi import HTTPException
 
 from database.models import Category, Post, User
 from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostDetail
@@ -46,12 +51,13 @@ async def _create_new_post(body: CreatePost, db: AsyncSession, author: User) -> 
 
 
 async def _get_list_posts(db: AsyncSession) -> List[ShowPostDetail]:
-    result = await db.execute(select(Post).options(joinedload(Post.author), joinedload(Post.category)))
-    posts = result.scalars().all()
-    return [post.as_show_model() for post in posts]
+    async with db.begin():
+        result = await db.execute(select(Post).options(joinedload(Post.author), joinedload(Post.category)))
+        posts = result.scalars().all()
+        return [post.as_show_model() for post in posts]
 
 
-async def _get_post(db: AsyncSession, post_id: int) -> ShowPostDetail:
+async def _get_post(post_id: int, db: AsyncSession) -> ShowPostDetail:
     async with db.begin():
         post = await db.execute(
             select(Post).where(Post.id == post_id).options(
@@ -60,3 +66,13 @@ async def _get_post(db: AsyncSession, post_id: int) -> ShowPostDetail:
             )
         )
         return post.scalars().first()
+        
+    
+async def _delete_post(post_id: int, db: AsyncSession) -> int:
+    exists_statement = delete(Post).where(
+        (Post.id == post_id)
+    )
+    await db.execute(exists_statement)
+    await db.commit()
+
+    return post_id
