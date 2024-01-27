@@ -6,6 +6,7 @@ from sqlalchemy import (
     String,
     Integer,
     Text,
+    Numeric,
     ForeignKey,
     )
 from sqlalchemy.dialects.postgresql import (
@@ -72,6 +73,7 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(128))
     content = Column(Text)
+    price = Column(Numeric(precision=10, scale=2))
 
     user_id = Column(
         UUID(as_uuid=True), 

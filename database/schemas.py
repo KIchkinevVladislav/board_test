@@ -1,5 +1,6 @@
 import re
 import uuid
+from decimal import Decimal
 
 from fastapi import HTTPException
 from pydantic import BaseModel, EmailStr, validator
@@ -63,3 +64,20 @@ class ShowCategory(TunedModel):
     id: int
     title: str
     description: str
+
+
+class CreatePost(BaseModel):
+    title: str
+    content: str
+    category_id: int
+    price: Decimal
+
+
+class ShowPost(TunedModel):
+    id: int
+    title: str
+    content: str
+    price: Decimal
+
+    user_id: uuid.UUID
+    category_id: int
