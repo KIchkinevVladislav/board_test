@@ -60,31 +60,51 @@ async def login_for_access_token(
 #     return {"Success": True, "current_user": current_user}
 
 
+def _check_admin_role(current_user):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=400, detail='You do not have administrator rights.'
+        )
+    
+def _check_not_yourself(current_user, user_id):
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=400, detail='Cannot manage privileges of itself.'
+        )
+
+def _check_user_for_promotion_or_revoke(user, promotion=True):
+    if user is None:
+        raise HTTPException(
+            status_code=404, detail=f'User not found.'
+        )
+    if promotion:    
+        if user.is_admin:
+            raise HTTPException(
+                status_code=409,
+                detail=f'User with id {user.id} already promoted to admin',
+            )
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=409, 
+            detail=f"User with id {user.id} has no admin privileges."
+        )
+    
+
+
 @router.patch('/admin_privilege', response_model=UpdatedUserResponse)
 async def grant_admin_privilege(
     user_id: UUID,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user_from_token),
 ):
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=400, detail='You do not have administrator rights.'
-        )
-    if current_user.id == user_id:
-        raise HTTPException(
-            status_code=400, detail='Cannot manage privileges of itself.'
-        )
+    _check_admin_role(current_user)
+
+    _check_not_yourself(current_user, user_id)
 
     user_for_promotion = await _get_user_by_id(user_id, db)
-    if user_for_promotion.is_admin:
-        raise HTTPException(
-            status_code=409,
-            detail=f'User with id {user_id} already promoted to admin',
-        )
-    if user_for_promotion is None:
-        raise HTTPException(
-            status_code=404, detail=f'User with id {user_id} not found.'
-        )
+
+    _check_user_for_promotion_or_revoke(user_for_promotion, True)
+
     updated_user_params = {
         'roles': user_for_promotion.adding_admin_role()
     }
@@ -95,4 +115,31 @@ async def grant_admin_privilege(
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f'Database error: {err}')
+    return UpdatedUserResponse(updated_user_id=updated_user_id)
+
+
+@router.delete('/admin_privilege', response_model=UpdatedUserResponse)
+async def revoke_admin_privilege(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    _check_admin_role(current_user)
+
+    _check_not_yourself(current_user, user_id)
+
+    user_for_revoke_admin_privileges = await _get_user_by_id(user_id, db)
+
+    _check_user_for_promotion_or_revoke(user_for_revoke_admin_privileges, False)
+
+    updated_user_params = {
+        "roles": user_for_revoke_admin_privileges.remove_admin_role()
+    }
+    try:
+        updated_user_id = await _update_user(
+            updated_user_params=updated_user_params, db=db, user_id=user_id
+        )
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f"Database error: {err}")
     return UpdatedUserResponse(updated_user_id=updated_user_id)
