@@ -10,8 +10,8 @@ from sqlalchemy.exc import IntegrityError
 
 from database.db import get_db
 from database.models import User, Post
-from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostList
-from crud.post_crud import _create_new_category, _create_new_post, _get_list_posts
+from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostDetail
+from crud.post_crud import _create_new_category, _create_new_post, _get_list_posts, _get_post
 from crud.user_crud import get_current_user_from_token
 from api.user_router import _check_admin_role
 
@@ -45,10 +45,25 @@ async def create_post(body: CreatePost,
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
     
 
-@router.get('/', response_model=List[ShowPostList])
+@router.get('/', response_model=List[ShowPostDetail])
 async def get_posts(db: AsyncSession = Depends(get_db)):
     try:
         return await _get_list_posts(db)
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
+        
+
+@router.get("/{post_id}", response_model=ShowPostDetail)
+async def get_post(post_id: int, db: AsyncSession = Depends(get_db)):
+    try:
+        post = await _get_post(db, post_id)
+        if not post:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Post number {post_id} does not exist.')
+        return post.as_show_model()
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f'Database error: {err}')
+

@@ -2,7 +2,6 @@ import uvicorn
 from fastapi import FastAPI
 
 
-
 from api.user_router import router as user_routes
 from api.post_router import router as post_routes
 

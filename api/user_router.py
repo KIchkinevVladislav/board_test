@@ -63,7 +63,7 @@ async def login_for_access_token(
 def _check_admin_role(current_user):
     if not current_user.is_admin:
         raise HTTPException(
-            status_code=400, detail='Only an administrator can do this.'
+            status_code=403, detail='Only an administrator can do this.'
         )
     
 

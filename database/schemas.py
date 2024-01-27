@@ -84,7 +84,7 @@ class ShowPost(TunedModel):
     category_id: int
 
 
-class ShowPostList(BaseModel):
+class ShowPostDetail(TunedModel):
     id: int
     title: str
     content: str

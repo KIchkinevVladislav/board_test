@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 from typing import List
 
 from database.models import Category, Post, User
-from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostList
+from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostDetail
 from database.db import get_db
 
 
@@ -45,7 +45,18 @@ async def _create_new_post(body: CreatePost, db: AsyncSession, author: User) -> 
         )
 
 
-async def _get_list_posts(db: AsyncSession) -> List[ShowPostList]:
+async def _get_list_posts(db: AsyncSession) -> List[ShowPostDetail]:
     result = await db.execute(select(Post).options(joinedload(Post.author), joinedload(Post.category)))
     posts = result.scalars().all()
     return [post.as_show_model() for post in posts]
+
+
+async def _get_post(db: AsyncSession, post_id: int) -> ShowPostDetail:
+    async with db.begin():
+        post = await db.execute(
+            select(Post).where(Post.id == post_id).options(
+                joinedload(Post.author),
+                joinedload(Post.category)
+            )
+        )
+        return post.scalars().first()
