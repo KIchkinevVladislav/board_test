@@ -63,14 +63,16 @@ async def login_for_access_token(
 def _check_admin_role(current_user):
     if not current_user.is_admin:
         raise HTTPException(
-            status_code=400, detail='You do not have administrator rights.'
+            status_code=400, detail='Only an administrator can do this.'
         )
     
+
 def _check_not_yourself(current_user, user_id):
     if current_user.id == user_id:
         raise HTTPException(
             status_code=400, detail='Cannot manage privileges of itself.'
         )
+
 
 def _check_user_for_promotion_or_revoke(user, promotion=True):
     if user is None:

@@ -11,7 +11,7 @@ from jose import jwt, JWTError
 
 from envparse import Env
 
-from database.models import Role, User
+from database.models import Role
 from database.schemas import UserCreate, ShowUser
 from database.dals import UserDAL
 from database.db import get_db

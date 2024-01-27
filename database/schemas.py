@@ -52,3 +52,14 @@ class Token(BaseModel):
 
 class UpdatedUserResponse(BaseModel):
     updated_user_id: uuid.UUID
+
+
+class CategoryCreate(BaseModel):
+    title: str
+    description: str
+
+
+class ShowCategory(TunedModel):
+    id: int
+    title: str
+    description: str
