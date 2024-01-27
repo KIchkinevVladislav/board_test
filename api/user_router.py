@@ -1,5 +1,6 @@
 from logging import getLogger
 from datetime import timedelta
+from uuid import UUID
 
 from fastapi import APIRouter
 from fastapi import HTTPException, status
@@ -11,8 +12,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 
 from database.db import get_db
-from database.schemas import ShowUser, UserCreate, Token
-from crud.user_crud import _create_new_user, authenticate_user, create_access_token, get_current_user_from_token
+from database.schemas import ShowUser, UserCreate, Token, UpdatedUserResponse
+from crud.user_crud import (_create_new_user, authenticate_user, create_access_token, 
+                            get_current_user_from_token, _get_user_by_id, _update_user)
+
 from crud.user_crud import ACCESS_TOKEN_EXPIRE_MINUTES
 
 from database.models import User
@@ -55,3 +58,41 @@ async def login_for_access_token(
 #     current_user: User = Depends(get_current_user_from_token),
 # ):
 #     return {"Success": True, "current_user": current_user}
+
+
+@router.patch('/admin_privilege', response_model=UpdatedUserResponse)
+async def grant_admin_privilege(
+    user_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=400, detail='You do not have administrator rights.'
+        )
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=400, detail='Cannot manage privileges of itself.'
+        )
+
+    user_for_promotion = await _get_user_by_id(user_id, db)
+    if user_for_promotion.is_admin:
+        raise HTTPException(
+            status_code=409,
+            detail=f'User with id {user_id} already promoted to admin',
+        )
+    if user_for_promotion is None:
+        raise HTTPException(
+            status_code=404, detail=f'User with id {user_id} not found.'
+        )
+    updated_user_params = {
+        'roles': user_for_promotion.adding_admin_role()
+    }
+    try:
+        updated_user_id = await _update_user(
+            updated_user_params=updated_user_params, db=db, user_id=user_id
+        )
+    except IntegrityError as err:
+        logger.error(err)
+        raise HTTPException(status_code=503, detail=f'Database error: {err}')
+    return UpdatedUserResponse(updated_user_id=updated_user_id)

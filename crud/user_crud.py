@@ -1,6 +1,7 @@
 
 from typing import Optional
 from datetime import datetime, timedelta
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException
@@ -109,3 +110,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         to_encode, SECRET_KEY, algorithm=ALGORITHM
     )
     return encoded_jwt
+
+
+async def _get_user_by_id(user_id, db: AsyncSession):
+    async with db.begin():
+        user_dal = UserDAL(db)
+        user = await user_dal.get_user_by_id(
+            user_id=user_id,
+        )
+        if user is not None:
+            return user
+        
+
+async def _update_user(
+    updated_user_params: dict, user_id: UUID, db: AsyncSession
+):
+    async with db.begin():
+        user_dal = UserDAL(db)
+        updated_user_id = await user_dal.update_user(
+            user_id=user_id, **updated_user_params
+        )
+        return updated_user_id
