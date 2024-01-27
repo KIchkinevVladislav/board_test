@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, EmailStr, validator
 
 
-LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
+LETTER_MATCH_PATTERN = re.compile(r'^[а-яА-Яa-zA-Z\-]+$')
 
 class UserCreate(BaseModel):
     name: str
@@ -13,28 +13,28 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
-    @validator("name")
+    @validator('name')
     def validate_name(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
             raise HTTPException(
-                status_code=422, detail="Name should contains only letters"
+                status_code=422, detail='Name should contains only letters'
             )
         return value
 
-    @validator("surname")
+    @validator('surname')
     def validate_surname(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
             raise HTTPException(
-                status_code=422, detail="Surname should contains only letters"
+                status_code=422, detail='Surname should contains only letters'
             )
         return value
 
 
 class TunedModel(BaseModel):
     class Config:
-        """tells pydantic to convert even non dict obj to json"""
+        """Tells pydantic to convert even non dict obj to json"""
 
-        orm_mode = True
+        from_attributes = True
 
 
 class ShowUser(TunedModel):
@@ -43,3 +43,8 @@ class ShowUser(TunedModel):
     surname: str
     email: EmailStr
     is_active: bool
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

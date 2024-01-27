@@ -10,4 +10,7 @@ passlib
 bcrypt
 pydantic[email]
 
+python-jose
+python-multipart
+
 envparse
