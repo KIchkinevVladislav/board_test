@@ -16,6 +16,7 @@ from sqlalchemy.dialects.postgresql import (
 from sqlalchemy.orm import relationship
 
 from .db import Base
+from .schemas import ShowPostList
 
 """
 Block with database models.
@@ -88,6 +89,18 @@ class Post(Base):
 
     author = relationship('User', back_populates='posts')
     category = relationship('Category', back_populates='posts')
+
+
+    def as_show_model(self) -> ShowPostList:
+        return ShowPostList(
+            id=self.id,
+            title=self.title,
+            content=self.content,
+            price=self.price,
+            user_email=self.author.email,
+            category_name=self.category.title
+        )
+
 
 
 class Category(Base):
