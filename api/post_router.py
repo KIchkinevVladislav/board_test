@@ -45,7 +45,7 @@ async def create_post(body: CreatePost,
         raise HTTPException(status_code=503, detail=f"Database error: {err}")
     
 
-@router.get('/list_posts', response_model=List[ShowPostList])
+@router.get('/', response_model=List[ShowPostList])
 async def get_posts(db: AsyncSession = Depends(get_db)):
     try:
         return await _get_list_posts(db)
