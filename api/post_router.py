@@ -52,7 +52,8 @@ async def get_posts(
     size: int = Query(10, le=100),
     filter_params: PostFilter = Depends(PostFilter),
     sort_by: str = 'id',
-    sort_desc: bool = False
+    sort_desc: bool = False,
+    user: User = Depends(get_current_user_from_token)
 ):
     try:
         return await _get_list_posts(db=db, page=page, size=size, post_filter=filter_params, sort_by=sort_by, sort_desc=sort_desc)
@@ -62,7 +63,7 @@ async def get_posts(
       
 
 @router.get('/{post_id}', response_model=ShowPostDetail)
-async def get_post(post_id: int, db: AsyncSession = Depends(get_db)):
+async def get_post(post_id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user_from_token)):
     try:
         post = await _get_post(post_id, db)
         if not post:

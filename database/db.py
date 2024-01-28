@@ -11,16 +11,16 @@ Block for common interaction with database
 """
 env = Env()
 
-SQLALCHEMY_DATABASE_URL = env.str(
-    'SQLALCHEMY_DATABASE_URL',
-    default='postgresql+asyncpg://user:password@localhost/dbase'
+REAL_DATABASE_URL = env.str(
+    "REAL_DATABASE_URL",
+    default="postgresql+asyncpg://postgres:postgres@db:5432/postgres",
 )
 
-# create async engine for interaction with database
 engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL,
+    REAL_DATABASE_URL,
     future=True,
     echo=True,
+    execution_options={"isolation_level": "AUTOCOMMIT"},
 )
 
 # create session for the interaction with database

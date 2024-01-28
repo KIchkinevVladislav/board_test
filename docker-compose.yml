@@ -1,0 +1,36 @@
+version: "3.0"
+services:
+  db:
+    container_name: "db"
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - custom
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  board_app:
+    container_name: board_app
+    image: board_app # Specify the name of the Docker image to be built
+    depends_on:
+      - db
+    environment:
+      REAL_DATABASE_URL: "postgresql+asyncpg://postgres:postgres@db:5432/postgres"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - custom
+      
+networks:
+  custom:
+    driver: bridge
+volumes:
+  db-data:
