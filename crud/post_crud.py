@@ -1,13 +1,12 @@
 from typing import List
-from typing import Union
-from uuid import UUID
 from decimal import Decimal
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete
-from sqlalchemy.orm import joinedload
-from fastapi import HTTPException
+from sqlalchemy.orm import joinedload, selectinload
+from fastapi_filter import FilterDepends
+
+from utils import PostFilter
 
 from database.models import Category, Post, User
 from database.schemas import CategoryCreate, ShowCategory, CreatePost, ShowPost, ShowPostDetail
@@ -48,16 +47,32 @@ async def _create_new_post(body: CreatePost, db: AsyncSession, author: User) -> 
             user_id=db_post.user_id,
             category_id=db_post.category_id
         )
+    
 
-
-async def _get_list_posts(db: AsyncSession) -> List[ShowPostDetail]:
+async def _get_list_posts(db: AsyncSession, page: int, size: int, post_filter: PostFilter = FilterDepends(PostFilter)) -> List[ShowPostDetail]:
     async with db.begin():
-        result = await db.execute(select(Post).options(joinedload(Post.author), joinedload(Post.category)))
+        query = select(Post).offset(page*size).limit(size).options(
+            selectinload(Post.author),
+            selectinload(Post.category)
+        )
+
+        query = post_filter.filter(query)
+        result = await db.execute(query)
         posts = result.scalars().all()
-        return [post.as_show_model() for post in posts]
+        return [
+            ShowPostDetail(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                price=post.price,
+                user_email=post.author.email,
+                category_name=post.category.title
+            )
+            for post in posts
+        ]
 
 
-async def _get_post(post_id: int, db: AsyncSession) -> ShowPostDetail:
+async def _get_post(post_id: int, db: AsyncSession) -> Post:
     async with db.begin():
         post = await db.execute(
             select(Post).where(Post.id == post_id).options(

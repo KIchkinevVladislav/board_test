@@ -1,4 +1,3 @@
-
 from typing import Optional
 from datetime import datetime, timedelta
 from uuid import UUID
@@ -15,7 +14,7 @@ from database.models import Role
 from database.schemas import UserCreate, ShowUser
 from database.dals import UserDAL
 from database.db import get_db
-from hashing import Hasher
+from utils import Hasher
 """
 Block for working with the user model, 
 registration and authorization.
