@@ -2,7 +2,7 @@ from typing import List
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import delete
+from sqlalchemy import delete, desc
 from sqlalchemy.orm import joinedload, selectinload
 from fastapi_filter import FilterDepends
 
@@ -49,14 +49,30 @@ async def _create_new_post(body: CreatePost, db: AsyncSession, author: User) -> 
         )
     
 
-async def _get_list_posts(db: AsyncSession, page: int, size: int, post_filter: PostFilter = FilterDepends(PostFilter)) -> List[ShowPostDetail]:
+async def _get_list_posts(
+        db: AsyncSession, 
+        page: int, 
+        size: int, 
+        post_filter: PostFilter = FilterDepends(PostFilter),
+        sort_by: str = 'id',
+        sort_desc: bool = False
+) -> List[ShowPostDetail]:
     async with db.begin():
         query = select(Post).offset(page*size).limit(size).options(
             selectinload(Post.author),
             selectinload(Post.category)
         )
-
+        
+        # filtration
         query = post_filter.filter(query)
+
+        # sorting
+        if sort_desc:
+            query = query.order_by(desc(getattr(Post, sort_by)))
+        else:
+            query = query.order_by(getattr(Post, sort_by))
+
+
         result = await db.execute(query)
         posts = result.scalars().all()
         return [

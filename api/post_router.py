@@ -34,7 +34,6 @@ async def create_category(body: CategoryCreate,
         raise HTTPException(status_code=503, detail=f'Database error: {err}')
     
 
-
 @router.post('/create_post', response_model=ShowPost)
 async def create_post(body: CreatePost, 
                       db: AsyncSession = Depends(get_db), 
@@ -52,9 +51,11 @@ async def get_posts(
     page: int = Query(0, ge=0),
     size: int = Query(10, le=100),
     filter_params: PostFilter = Depends(PostFilter),
+    sort_by: str = 'id',
+    sort_desc: bool = False
 ):
     try:
-        return await _get_list_posts(db=db, page=page, size=size, post_filter=filter_params)
+        return await _get_list_posts(db=db, page=page, size=size, post_filter=filter_params, sort_by=sort_by, sort_desc=sort_desc)
     except IntegrityError as err:
         logger.error(err)
         raise HTTPException(status_code=503, detail=f'Database error: {err}')
