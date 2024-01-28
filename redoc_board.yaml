@@ -1,0 +1,576 @@
+openapi: 3.1.0
+info:
+  title: Сервис по размещению объявлений OpenAPI спецификация
+  version: 0.0.1
+servers:
+  - url: http:/localhost:8000
+  description: Dev server
+paths:
+  /posts/:
+    get:
+      operationId: get_posts_posts__get
+      parameters:
+      - in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          minimum: 0
+          title: Page
+          type: integer
+      - in: query
+        name: size
+        required: false
+        schema:
+          default: 10
+          maximum: 100
+          title: Size
+          type: integer
+      - in: query
+        name: sort_by
+        required: false
+        schema:
+          default: id
+          title: Sort By
+          type: string
+      - in: query
+        name: sort_desc
+        required: false
+        schema:
+          default: false
+          title: Sort Desc
+          type: boolean
+      - in: query
+        name: title__ilike
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title  Ilike
+      - in: query
+        name: price__gte
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          title: Price  Gte
+      - in: query
+        name: price__lte
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          title: Price  Lte
+      - in: query
+        name: category_id
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Category Id
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ShowPostDetail'
+                title: Response Get Posts Posts  Get
+                type: array
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Posts
+      tags:
+      - posts
+  /posts/create_category:
+    post:
+      operationId: create_category_posts_create_category_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowCategory'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Category
+      tags:
+      - posts
+  /posts/create_post:
+    post:
+      operationId: create_post_posts_create_post_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePost'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowPost'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Create Post
+      tags:
+      - posts
+  /posts/delete_post:
+    delete:
+      operationId: delete_post_posts_delete_post_delete
+      parameters:
+      - in: query
+        name: post_id
+        required: true
+        schema:
+          title: Post Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePostResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Delete Post
+      tags:
+      - posts
+  /posts/{post_id}:
+    get:
+      operationId: get_post_posts__post_id__get
+      parameters:
+      - in: path
+        name: post_id
+        required: true
+        schema:
+          title: Post Id
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowPostDetail'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Post
+      tags:
+      - posts
+  /user/admin_privilege:
+    delete:
+      operationId: revoke_admin_privilege_user_admin_privilege_delete
+      parameters:
+      - in: query
+        name: user_id
+        required: true
+        schema:
+          format: uuid
+          title: User Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatedUserResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Revoke Admin Privilege
+      tags:
+      - user
+    patch:
+      operationId: grant_admin_privilege_user_admin_privilege_patch
+      parameters:
+      - in: query
+        name: user_id
+        required: true
+        schema:
+          format: uuid
+          title: User Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdatedUserResponse'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      security:
+      - OAuth2PasswordBearer: []
+      summary: Grant Admin Privilege
+      tags:
+      - user
+  /user/sign-up:
+    post:
+      operationId: create_user_user_sign_up_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowUser'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Create User
+      tags:
+      - user
+  /user/token:
+    post:
+      operationId: login_for_access_token_user_token_post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Body_login_for_access_token_user_token_post'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Login For Access Token
+      tags:
+      - user
+
+components:
+  schemas:
+    Body_login_for_access_token_user_token_post:
+      properties:
+        client_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Client Id
+        client_secret:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Client Secret
+        grant_type:
+          anyOf:
+          - pattern: password
+            type: string
+          - type: 'null'
+          title: Grant Type
+        password:
+          title: Password
+          type: string
+        scope:
+          default: ''
+          title: Scope
+          type: string
+        username:
+          title: Username
+          type: string
+      required:
+      - username
+      - password
+      title: Body_login_for_access_token_user_token_post
+      type: object
+    CategoryCreate:
+      properties:
+        description:
+          title: Description
+          type: string
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - description
+      title: CategoryCreate
+      type: object
+    CreatePost:
+      properties:
+        category_id:
+          title: Category Id
+          type: integer
+        content:
+          title: Content
+          type: string
+        price:
+          anyOf:
+          - type: number
+          - type: string
+          title: Price
+        title:
+          title: Title
+          type: string
+      required:
+      - title
+      - content
+      - category_id
+      - price
+      title: CreatePost
+      type: object
+    DeletePostResponse:
+      properties:
+        deleted_post_id:
+          title: Deleted Post Id
+          type: integer
+      required:
+      - deleted_post_id
+      title: DeletePostResponse
+      type: object
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          title: Detail
+          type: array
+      title: HTTPValidationError
+      type: object
+    ShowCategory:
+      properties:
+        description:
+          title: Description
+          type: string
+        id:
+          title: Id
+          type: integer
+        title:
+          title: Title
+          type: string
+      required:
+      - id
+      - title
+      - description
+      title: ShowCategory
+      type: object
+    ShowPost:
+      properties:
+        category_id:
+          title: Category Id
+          type: integer
+        content:
+          title: Content
+          type: string
+        id:
+          title: Id
+          type: integer
+        price:
+          title: Price
+          type: string
+        title:
+          title: Title
+          type: string
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+      required:
+      - id
+      - title
+      - content
+      - price
+      - user_id
+      - category_id
+      title: ShowPost
+      type: object
+    ShowPostDetail:
+      properties:
+        category_name:
+          title: Category Name
+          type: string
+        content:
+          title: Content
+          type: string
+        id:
+          title: Id
+          type: integer
+        price:
+          title: Price
+          type: string
+        title:
+          title: Title
+          type: string
+        user_email:
+          title: User Email
+          type: string
+      required:
+      - id
+      - title
+      - content
+      - price
+      - user_email
+      - category_name
+      title: ShowPostDetail
+      type: object
+    ShowUser:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+        is_active:
+          title: Is Active
+          type: boolean
+        name:
+          title: Name
+          type: string
+        surname:
+          title: Surname
+          type: string
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+      required:
+      - user_id
+      - name
+      - surname
+      - email
+      - is_active
+      title: ShowUser
+      type: object
+    Token:
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        token_type:
+          title: Token Type
+          type: string
+      required:
+      - access_token
+      - token_type
+      title: Token
+      type: object
+    UpdatedUserResponse:
+      properties:
+        updated_user_id:
+          format: uuid
+          title: Updated User Id
+          type: string
+      required:
+      - updated_user_id
+      title: UpdatedUserResponse
+      type: object
+    UserCreate:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+        name:
+          title: Name
+          type: string
+        password:
+          title: Password
+          type: string
+        surname:
+          title: Surname
+          type: string
+      required:
+      - name
+      - surname
+      - email
+      - password
+      title: UserCreate
+      type: object
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+      type: object
+  securitySchemes:
+    OAuth2PasswordBearer:
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /user/token
+      type: oauth2
