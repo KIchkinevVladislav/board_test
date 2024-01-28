@@ -4,15 +4,15 @@ uvicorn[standard]==0.27.0
 sqlalchemy==2.0.25
 asyncpg==0.29.0
 alembic==1.13.1
-psycopg2-binary
+psycopg2-binary==2.9.9
 
-passlib
-bcrypt
-pydantic[email]
+passlib==1.7.4
+bcrypt==4.1.2
+pydantic[email]==2.5.3
 
-python-jose
-python-multipart
+python-jose==3.3.0
+python-multipart==0.0.6
 
-envparse
+envparse==0.2.0
 
-fastapi_filter
+fastapi_filter==1.1.0
