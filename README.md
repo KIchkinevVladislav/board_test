@@ -41,11 +41,11 @@ REST API для сервиса **Board**.
 
 - Запускаем контейнеры
 
-`docker-compose up -d --build`
+`docker compose up -d --build`
 
 - Применяем миграции
 
-`docker-compose exec board_app alembic upgrade head`
+`docker compose exec board_app alembic upgrade head`
 
 Приложение готово для тестирования:
 
